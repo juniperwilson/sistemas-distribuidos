@@ -30,7 +30,7 @@ struct list_t *list_create() {
  * Retorna 0 (OK) ou -1 em caso de erro.
  */
 int list_destroy(struct list_t *list) { //função alterada por RIta e Filipa
-    if (list == NULL) {
+    if (list == NULL)
         return -1;
     struct car_t* current = list->head;
     while (current != NULL) {
