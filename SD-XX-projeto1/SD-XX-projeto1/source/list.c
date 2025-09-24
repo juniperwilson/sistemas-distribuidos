@@ -2,9 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "list.h"
 #include "list-private.h"
-#include "data.h" 
+#include "list-utils-private.h"
+#include "data.h"
 
 /**
  * @file list.h
@@ -16,10 +18,9 @@
  * Retorna a lista ou NULL em caso de erro.
  */
 struct list_t *list_create() {
-    struct list_t* result = (struct list_t*)malloc(sizeof(struct list_t));
-    if (result == NULL) {
+    struct list_t* result = (struct list_t*) malloc(sizeof(struct list_t));
+    if (result == NULL)
         return NULL;
-    }
     result->size = 0;
     result->head = NULL;
     return result;
@@ -31,7 +32,6 @@ struct list_t *list_create() {
 int list_destroy(struct list_t *list) { //função alterada por RIta e Filipa
     if (list == NULL) {
         return -1;
-    }
     struct car_t* current = list->head;
     while (current != NULL) {
         struct car_t* temporary = current->next;
@@ -51,10 +51,9 @@ int list_destroy(struct list_t *list) { //função alterada por RIta e Filipa
  * Retorna 0 (OK) ou -1 em caso de erro.
  */
 int list_add(struct list_t *list, struct data_t *car) {
-    if (list == NULL) {
+    if (list == NULL || car == NULL)
         return -1;
-    }
-    struct car_t* node = (struct car_t*)malloc(sizeof(struct car_t));
+    struct car_t* node = (struct car_t*) malloc(sizeof(struct car_t));
     if (node == NULL) {
         return -1;
     }
@@ -66,6 +65,7 @@ int list_add(struct list_t *list, struct data_t *car) {
         current = current->next;
     }
     current->next = node;
+    list->size++;
     return 0;
 }
 
@@ -74,9 +74,8 @@ int list_add(struct list_t *list, struct data_t *car) {
  * DOESNT EVER RETURN -1
  */
 int list_remove_by_model(struct list_t *list, const char *modelo) {
-    if (list == NULL) {
+    if (list == NULL || modelo == NULL)
         return -1;
-    }
     struct car_t* current = list->head;
     while (current->next != NULL) {
         struct car_t* discard = current->next;
@@ -84,6 +83,7 @@ int list_remove_by_model(struct list_t *list, const char *modelo) {
             discard->next = current->next;
             free(discard);
             discard = NULL;
+            list->size--;
             return 0;
         }
         current = current->next;
@@ -95,9 +95,8 @@ int list_remove_by_model(struct list_t *list, const char *modelo) {
  * Retorna ponteiro para os dados ou NULL se não encontrar ou em caso de erro.
  */
 struct data_t *list_get_by_marca(struct list_t *list, enum marca_t marca) {
-    if (list == NULL) {
+    if (list == NULL)
         return NULL;
-    }
     struct car_t* current = list->head;
     while (current != NULL) {
         if (current->data->marca == marca) {
@@ -113,13 +112,11 @@ struct data_t *list_get_by_marca(struct list_t *list, enum marca_t marca) {
  * Retorna o array ou NULL em caso de erro.
  */
 struct data_t **list_get_by_year(struct list_t *list, int ano) {
-    if (list == NULL) {
+    if (list == NULL)
         return NULL;
-    }
-    struct data_t** cars = (struct data_t**)malloc(sizeof(struct data_t) * list->size + 1);
-    if (cars == NULL) {
+    struct data_t** cars = (struct data_t**) malloc(sizeof(struct data_t) * list->size + 1);
+    if (cars == NULL)
         return NULL;
-    }
 
     struct car_t* current = list->head;
     int offset = 0;
@@ -131,7 +128,7 @@ struct data_t **list_get_by_year(struct list_t *list, int ano) {
         current = current->next;
     }
 
-    struct data_t** result = (struct data_t**)malloc(sizeof(struct data_t) * offset + 1);
+    struct data_t** result = (struct data_t**) malloc(sizeof(struct data_t) * offset + 1);
     if (result == NULL) {
         return NULL;
     }
@@ -148,24 +145,18 @@ struct data_t **list_get_by_year(struct list_t *list, int ano) {
  * Retorna 0 (OK) ou -1 em caso de erro.
  */
 int list_order_by_year(struct list_t *list) {
-    if (list == NULL) {
+    if (list == NULL)
         return -1;
-    }
+
+    
 }
 
 /* Retorna o número de carros na lista ou -1 em caso de erro.
  */
 int list_size(struct list_t *list) {
-    if (list == NULL) {
+    if (list == NULL)
         return -1;
-    }
-    int counter = 0;
-    struct car_t* pointer = list->head;
-    while (pointer != NULL) {
-        counter += 1;
-        pointer = pointer->next;
-    }
-    return counter;
+    return list->size;
 }
 
 /* Constrói um array de strings com os modelos dos carros na lista.
@@ -173,26 +164,41 @@ int list_size(struct list_t *list) {
  * Retorna o array ou NULL em caso de erro.
  */
 char **list_get_model_list(struct list_t *list) {
-    if (list == NULL) {
+    if (list == NULL)
         return NULL;
-    }
-    char** models = (char**)malloc(sizeof(char*) * list->size);
+    char** models = (char**) malloc(sizeof(char*) * list->size);
     if (models == NULL) {
         return NULL;
     }
     struct car_t* current = list->head;
+    int size = 0;
     while (current != NULL) {
-        
+        if (contains(models, current->data->modelo, size) == 0) {
+            models[size] = current->data->modelo;
+            size++;
+        }
+        current = current->next;
     }
+    if (size == 0)
+        return NULL;
+    char** result = (char**) malloc(sizeof(char*) * size);
+    if (result == NULL)
+        return NULL;
+    
+    int i;
+    for (i = 0; i < size; i++) {
+        result[i] = models[i];
+    }
+    free(models);
+    return result;
 }
 
 /* Liberta a memória ocupada pelo array de modelos.
  * Retorna 0 (OK) ou -1 em caso de erro.
  */
 int list_free_model_list(char **models) {
-    if (models == NULL) {
+    if (models == NULL)
         return -1;
-    }
     int i = 0;
     char* current = models[0];
     while (current != NULL) {
