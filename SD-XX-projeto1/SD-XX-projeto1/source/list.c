@@ -4,7 +4,7 @@
 #include <string.h>
 #include "list.h"
 #include "list-private.h"
-#include "data.h"
+#include "data.h" 
 
 /**
  * @file list.h
@@ -28,16 +28,21 @@ struct list_t *list_create() {
 /* Elimina a lista, libertando toda a memória ocupada.
  * Retorna 0 (OK) ou -1 em caso de erro.
  */
-int list_destroy(struct list_t *list) {
+int list_destroy(struct list_t *list) { //função alterada por RIta e Filipa
     if (list == NULL) {
         return -1;
     }
     struct car_t* current = list->head;
-    while (current->next != NULL) {
+    while (current != NULL) {
         struct car_t* temporary = current->next;
+        if(current->data !=NULL) { //destruir a data do carro caso não seja já null
+            data_destroy(current->data);
+        }
         free(current);
         current = temporary;
     }
+
+    free(list); 
     return 0;
 }
 
@@ -57,7 +62,7 @@ int list_add(struct list_t *list, struct data_t *car) {
     node->next = NULL;
     
     struct car_t* current = list->head;
-    while (current->next != NULL) {
+    while (current != NULL) { //alterado
         current = current->next;
     }
     current->next = node;
@@ -196,5 +201,4 @@ int list_free_model_list(char **models) {
     }
     return 0;
 }
-
 
