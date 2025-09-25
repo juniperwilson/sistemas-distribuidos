@@ -13,6 +13,11 @@
  * @brief Interface para a estrutura da lista de automóveis.
  */
 
+void freeTEST(void* ptr) {
+    printf("FREEING %p\n", ptr);
+    free(ptr);
+}
+
 
 /* Cria e inicializa uma nova lista de carros.
  * Retorna a lista ou NULL em caso de erro.
@@ -22,7 +27,9 @@ struct list_t *list_create() {
     if (result == NULL)
         return NULL;
     result->size = 0;
-    result->head = NULL;
+    result->head = (struct car_t*) malloc(sizeof(struct car_t));
+    if (result->head == NULL) 
+        return NULL;
     return result;
 }
 
@@ -30,8 +37,10 @@ struct list_t *list_create() {
  * Retorna 0 (OK) ou -1 em caso de erro.
  */
 int list_destroy(struct list_t *list) { //função alterada por RIta e Filipa
-    if (list == NULL)
+    printf("GOT TO 1\n");
+    if (list == NULL) {
         return -1;
+    }
     if (list->size == 0) {
         free(list);
         return 0;
@@ -42,7 +51,8 @@ int list_destroy(struct list_t *list) { //função alterada por RIta e Filipa
     while (current != NULL) {
         struct car_t* temporary = current->next;
         if (current->data != NULL) { //destruir a data do carro caso não seja já null
-            data_destroy(current->data);
+            if (data_destroy(current->data) != 0)
+                return -1;
         }
         free(current);
         current = temporary;
@@ -64,17 +74,16 @@ int list_add(struct list_t *list, struct data_t *car) {
     }
     node->data = car;
     node->next = NULL;
-    
     struct car_t* current = list->head;
     if (current == NULL) {
         free(node);
         return -1;
     }
+    list->size++;
     while (current->next != NULL) { 
         current = current->next;
     }
     current->next = node;
-    list->size++;
     return 0;
 }
 
@@ -224,4 +233,3 @@ int list_free_model_list(char **models) {
     }
     return 0;
 }
-
