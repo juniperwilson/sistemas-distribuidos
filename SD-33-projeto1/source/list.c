@@ -32,16 +32,21 @@ struct list_t *list_create() {
 int list_destroy(struct list_t *list) { //função alterada por RIta e Filipa
     if (list == NULL)
         return -1;
+    if (list->size == 0) {
+        free(list);
+        return 0;
+    }
     struct car_t* current = list->head;
+    if (current == NULL)
+        return -1;
     while (current != NULL) {
         struct car_t* temporary = current->next;
-        if(current->data !=NULL) { //destruir a data do carro caso não seja já null
+        if (current->data != NULL) { //destruir a data do carro caso não seja já null
             data_destroy(current->data);
         }
         free(current);
         current = temporary;
     }
-
     free(list); 
     return 0;
 }
@@ -61,7 +66,11 @@ int list_add(struct list_t *list, struct data_t *car) {
     node->next = NULL;
     
     struct car_t* current = list->head;
-    while (current != NULL) { //alterado
+    if (current == NULL) {
+        free(node);
+        return -1;
+    }
+    while (current->next != NULL) { 
         current = current->next;
     }
     current->next = node;
@@ -77,6 +86,8 @@ int list_remove_by_model(struct list_t *list, const char *modelo) {
     if (list == NULL || modelo == NULL)
         return -1;
     struct car_t* current = list->head;
+    if (current == NULL)
+        return -1;
     while (current->next != NULL) {
         struct car_t* discard = current->next;
         if (strcmp(discard->data->modelo, modelo) == 0) {
@@ -98,6 +109,8 @@ struct data_t *list_get_by_marca(struct list_t *list, enum marca_t marca) {
     if (list == NULL)
         return NULL;
     struct car_t* current = list->head;
+    if (current == NULL)
+        return NULL;
     while (current != NULL) {
         if (current->data->marca == marca) {
             return current->data;
@@ -120,6 +133,8 @@ struct data_t **list_get_by_year(struct list_t *list, int ano) {
 
     struct car_t* current = list->head;
     int offset = 0;
+    if (current == NULL)
+        return NULL;
     while (current != NULL) {
         if (current->data->ano == ano) {
             cars[offset] = current->data;
@@ -172,6 +187,8 @@ char **list_get_model_list(struct list_t *list) {
     }
     struct car_t* current = list->head;
     int size = 0;
+    if (current == NULL)
+        return NULL;
     while (current != NULL) {
         if (contains(models, current->data->modelo, size) == 0) {
             models[size] = current->data->modelo;
