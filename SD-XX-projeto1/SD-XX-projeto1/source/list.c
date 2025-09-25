@@ -145,10 +145,10 @@ struct data_t **list_get_by_year(struct list_t *list, int ano) {
  * Retorna 0 (OK) ou -1 em caso de erro.
  */
 int list_order_by_year(struct list_t *list) {
+    return 0;
     if (list == NULL)
         return -1;
 
-    
 }
 
 /* Retorna o número de carros na lista ou -1 em caso de erro.
