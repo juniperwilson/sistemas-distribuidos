@@ -45,7 +45,7 @@ CC = gcc
 # $(TEST_OBJECTS)/%.o: tests/%.c $($@)
 # 	 $(CC) $(CFLAGS) -o $@ -c $<
 
-all: data.o list-utils-private.o list.o test_data.o test_list.o test_serialization.o
+all: data.o list-utils-private.o list.o test_data.o test_list.o
 
 data.o: source/data.c include/data.h
 	gcc -c source/data.c -I include -Wall -o object/data.o 
@@ -60,10 +60,10 @@ list.o: source/list.c include/list.h include/data.h include/list-utils-private.h
 # 	gcc -c source/serialization.c -I include -Wall -o object/serialization.o   
 
 test_data.o: tests/test_data.c include/data.h
-	gcc -c tests/test_data.c -I include -Wall -o object/test_data.o   
+	gcc -g tests/test_data.c -I include -Wall -o object/test_data.o source/data.c   
 
 test_list.o: tests/test_list.c include/list.h
-	gcc -c tests/test_list.c -I include -Wall -o object/test_list.o  
+	gcc -g tests/test_list.c -I include -Wall -o object/test_list.o source/data.c source/list.c source/list-utils-private.c
 
 # test_serialization.o: tests/test_serialization.c include/serialization.h
 # 	gcc -c tests/test_serialization.c -I include -Wall -o object/test_serialization.o  
