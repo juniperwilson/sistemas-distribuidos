@@ -30,7 +30,8 @@ struct list_t *list_create() {
     result->head = (struct car_t*) malloc(sizeof(struct car_t));
     if (result->head == NULL) 
         return NULL;
-    result->head = NULL;
+    result->head->data = NULL;
+    result->head->next = NULL;
     return result;
 }
 
@@ -42,14 +43,22 @@ int list_destroy(struct list_t *list) { //função alterada por RIta e Filipa
     if (list == NULL) {
         return -1;
     }
+
+
+    //EMPTY LIST
     if (list->size == 0) {
+        free(list->head->data);
         free(list->head);
         free(list);
         printf("DESTROYING EMPTY LIST\n");
         return 0;
     }
+
+
+
+
     struct car_t* current = list->head;
-    if (current == NULL) {
+    if (current->data == NULL) {
         free(list->head);
         free(list);
         printf("RETURNING -1 IN DESTROY\n");
@@ -81,18 +90,36 @@ int list_add(struct list_t *list, struct data_t *car) {
     if (node == NULL) {
         return -1;
     }
+
+
+
+    printf("GOING TO ADD TO EMPTY LIST\n");
+    struct car_t* current = list->head;
+    if (list->size == 0) {
+        list->head->data = car;
+        list->head->next = NULL;
+        list->size++;
+        return 0;
+    }
+
+
     node->data = car;
     node->next = NULL;
-    struct car_t* current = list->head;
-    if (current == NULL) {
-        current = node;
+
+    printf("GOING TO ADD TO NON EMPTY LIST\n");
+    printf("%B\n", current->next != NULL);
+    if (current->next == NULL) {
+        current->next = node; 
+        list->size++;
         return 0;
     }
     while (current->next != NULL) { 
         current = current->next;
+        printf("TRAVERSING LIST\n");
     }
     current->next = node;
     list->size++;
+    printf("ADDED TO LIST\n");
     return 0;
 }
 
@@ -110,7 +137,15 @@ int list_remove_by_model(struct list_t *list, const char *modelo) {
         struct car_t* discard = current->next;
         if (strcmp(discard->data->modelo, modelo) == 0) {
             discard->next = current->next;
-            free(discard);
+                }
+        current = current->next;
+    }
+    return 1;
+}
+
+/* Obtém o primeiro carro que corresponda à marca indicada.
+ * Retorna ponteiro para os dados ou NULL se não encontrar ou em caso de erro.
+ */    free(discard);
             discard = NULL;
             list->size--;
             return 0;
