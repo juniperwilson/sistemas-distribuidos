@@ -130,23 +130,15 @@ int list_add(struct list_t *list, struct data_t *car) {
 int list_remove_by_model(struct list_t *list, const char *modelo) {
     if (list == NULL || modelo == NULL)
         return -1;
+
     struct car_t* current = list->head;
-    if (current == NULL)
-        return -1;
     while (current->next != NULL) {
         struct car_t* discard = current->next;
         if (strcmp(discard->data->modelo, modelo) == 0) {
             discard->next = current->next;
-                }
-        current = current->next;
-    }
-    return 1;
-}
-
-/* Obtém o primeiro carro que corresponda à marca indicada.
- * Retorna ponteiro para os dados ou NULL se não encontrar ou em caso de erro.
- */    free(discard);
+            free(discard);
             discard = NULL;
+
             list->size--;
             return 0;
         }
