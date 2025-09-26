@@ -24,32 +24,26 @@ struct list_t *list_create() {
         return NULL;
     result->size = 0;
     result->head = NULL;
-    
     return result;
 }
 
 /* Elimina a lista, libertando toda a memória ocupada.
  * Retorna 0 (OK) ou -1 em caso de erro.
  */
-int list_destroy(struct list_t *list) { //função alterada por RIta e Filipa
-    if (list == NULL) {
+int list_destroy(struct list_t *list) { 
+    if (list == NULL)
         return -1;
-    }
 
-    //EMPTY LIST
     if (list->size == 0) {
         free(list);
-        printf("DESTROYING EMPTY LIST\n");
         return 0;
     }
 
     struct car_t* current = list->head;
     while (current != NULL) {
         struct car_t* temporary = current->next;
-        if (current->data != NULL) { 
-            if (data_destroy(current->data) != 0)
-                return -1;
-        }
+        if (data_destroy(current->data) != 0)
+            return -1;
         free(current);
         current = temporary;
     }
@@ -106,8 +100,7 @@ int list_remove_by_model(struct list_t *list, const char *modelo) {
     struct car_t* previous = list->head;
     if (previous == NULL)
         return -1;
-    // if first item is the head of the list, frees it and points head to rest of list
-    // if the rest of list is null, head = null;
+   
     struct car_t* target = previous->next;
     int match = strcmp(previous->data->modelo, modelo);
     if (match == 0) {
@@ -165,7 +158,6 @@ struct data_t **list_get_by_year(struct list_t *list, int ano) {
     if (cars == NULL)
         return NULL;
 
-
     struct car_t* current = list->head;
     if (current == NULL)
         return NULL;
@@ -173,7 +165,6 @@ struct data_t **list_get_by_year(struct list_t *list, int ano) {
     while (current != NULL) {
         if (current->data->ano == ano) {
             cars[offset] = current->data;
-            printf("%s, %d \n", cars[offset]->modelo, cars[offset]->ano);
             offset++;
         }
         current = current->next;
@@ -186,8 +177,8 @@ struct data_t **list_get_by_year(struct list_t *list, int ano) {
     int i;
     for (i = 0; i < offset; i++) {
         result[i] = cars[i];
-        printf("%s, %d \n", result[i]->modelo, result[i]->ano);
     }
+    result[offset] = NULL;
     free(cars);
     
     return result;
@@ -200,7 +191,6 @@ int list_order_by_year(struct list_t *list) {
     return 0;
     if (list == NULL)
         return -1;
-
 }
 
 /* Retorna o número de carros na lista ou -1 em caso de erro.

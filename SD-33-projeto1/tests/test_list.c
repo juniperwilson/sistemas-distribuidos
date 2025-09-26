@@ -40,7 +40,6 @@ int testAddCars()
 
 int testRemoveByModel()
 {
-	printf("TESTED REMOVE");
 	struct list_t *list = list_create();
 	struct data_t *car = data_create(2021, 22000.0, MARCA_BMW, "320d", COMBUSTIVEL_GASOLEO);
 	list_add(list, car);
@@ -115,13 +114,13 @@ int main()
 {
 	int score = 0;
 
-	// score += testCreateList();
+	score += testCreateList();
 	score += testAddCars();
-	// score += testRemoveByModel();
-	// score += testGetByMarca();
-	// score += testGetByYear();
-	// score += testOrderByYear();
-	// score += testGetModelList();
+	score += testRemoveByModel();
+	score += testGetByMarca();
+	score += testGetByYear();
+	score += testOrderByYear();
+	score += testGetModelList();
 
 	printf("\nResultado dos testes: %d/7\n", score);
 	return (score == 7) ? 0 : -1;
