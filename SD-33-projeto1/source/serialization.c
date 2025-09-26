@@ -10,23 +10,27 @@
 int car_to_buffer(struct data_t *car, char **car_buf) {
     // TODO
 
-    // Verificar se o carro ou o buffer não existem
-    if (car == NULL || car_buf == NULL) {
+    // Verificar se o carro não existe
+    if (car == NULL) {
         return -1;
     }
-    
-    int bufferSize = 0;
+
+    int bufferSize = sizeof(car->ano) + sizeof(car->preco) + sizeof(car->marca) + sizeof(car->combustivel) + sizeof(car->modelo) + 1;
+    *car_buf = malloc(bufferSize + sizeof(int));
+    int offset = 0; // Para colocar a informação a partir da posição certa da memória - deslocamento
     // Copiar os dados do carro individualmente para o buffer
-    memcpy(car_buf, &car->ano, sizeof(car->ano));
-    bufferSize += sizeof(car->ano);
-    memcpy(car_buf + bufferSize, &car->preco, sizeof(car->preco));
-    bufferSize += sizeof(car->preco);
-    memcpy(car_buf + bufferSize, &car->marca, sizeof(car->marca));
-    bufferSize += sizeof(car->marca);
-    memcpy(car_buf + bufferSize, &car->modelo, sizeof(car->modelo));
-    bufferSize += sizeof(car->modelo);
-    memcpy(car_buf + bufferSize, &car->combustivel, sizeof(car->combustivel));
-    bufferSize += sizeof(car->combustivel);
+    memcpy(car_buf, &bufferSize, sizeof(int));
+    offset += sizeof(int);
+    memcpy(car_buf + offset, &car->ano, sizeof(car->ano));
+    offset += sizeof(car->ano);
+    memcpy(car_buf + offset, &car->preco, sizeof(car->preco));
+    offset += sizeof(car->preco);
+    memcpy(car_buf + offset, &car->marca, sizeof(car->marca));
+    offset += sizeof(car->marca);
+    memcpy(car_buf + offset, &car->modelo, sizeof(car->modelo));
+    offset += strlen(car->modelo)+1;
+    memcpy(car_buf + offset, &car->combustivel, sizeof(car->combustivel));
+    offset += sizeof(car->combustivel);
    
     return bufferSize;
 }
@@ -36,29 +40,37 @@ int car_to_buffer(struct data_t *car, char **car_buf) {
  */
 struct data_t *buffer_to_car(char *car_buf){
     //TODO
+
+   
+    
     
     // Verificar situação de erro
-    if (car_buf) {
-        int bufferSize = 0;
+    if (car_buf != NULL) {
+        int offset = 0;
+
+        int bufferSize;
+        memcpy(&bufferSize, car_buf, sizeof(int));
+        offset += sizeof(int);
+        
         // Obter os dados do carro do buffer
         int ano;
-        memcpy(&ano,car_buf, sizeof(int));
-        bufferSize += sizeof(int);
+        memcpy(&ano,car_buf + offset, sizeof(int));
+        offset += sizeof(int);
 
         float preco;
-        memcpy(&preco,car_buf + bufferSize, sizeof(float));
-        bufferSize += sizeof(float);
+        memcpy(&preco,car_buf + offset, sizeof(float));
+        offset += sizeof(float);
 
         enum marca_t marca;
-        memcpy(&marca,car_buf + bufferSize, sizeof(enum marca_t));
-        bufferSize += sizeof(marca);
+        memcpy(&marca,car_buf + offset, sizeof(enum marca_t));
+        offset += sizeof(marca);
 
         char *modelo;
-        memcpy(&modelo,car_buf + bufferSize, sizeof(char)); //not sure
-        bufferSize += sizeof(modelo);
+        memcpy(&modelo,car_buf + offset, bufferSize - offset - sizeof(enum combustivel_t)); // i think it makes sense
+        offset += strlen(modelo)+1;
 
         enum combustivel_t combustivel;
-        memcpy(&ano,car_buf + bufferSize, sizeof(enum combustivel_t));
+        memcpy(&combustivel,car_buf + offset, sizeof(enum combustivel_t));
         
         // Criar um novo carro
         struct data_t *carro = data_create(ano, preco, marca, modelo, combustivel);
@@ -69,6 +81,7 @@ struct data_t *buffer_to_car(char *car_buf){
 
         return carro;
     }
+    free(car_buf);
     return NULL;
 }
 
@@ -89,7 +102,7 @@ int car_list_to_buffer(struct list_t *list, char **list_buf){
     struct car_t* current = list->head;
     if (current && list) {
         while (current) {
-            int i = car_to_buffer(current, list_buf + bufferSize);
+            int i = car_to_buffer(current->data, list_buf + bufferSize);
             if (i >= 0) {
                 bufferSize += i;
             }
@@ -113,16 +126,16 @@ int car_list_to_buffer(struct list_t *list, char **list_buf){
 struct list_t *buffer_to_car_list(char *list_buf){
     //TODO
     // perceber como mexer no buffer -> como tirar e colocar info no buffer
-    int bufferSize = 0;
-    int listSize = 0;
+    //int bufferSize = 0;
+    //int listSize = 0;
     struct list_t* list = list_create();
-    struct car_t* current;
+    struct car_t* current = malloc(sizeof(struct car_t));
 
     if (list_buf && list) {
 
         while (list_buf) {
-            current = buffer_to_car(list_buf); 
-            int i = list_add(list, current);
+            current->data = buffer_to_car(list_buf); 
+            int i = list_add(list, current->data);
             if (i != 0) {
                 return NULL;
             }        
@@ -130,6 +143,6 @@ struct list_t *buffer_to_car_list(char *list_buf){
 
         return list;
     }
-
+    free(current);
     return NULL;
 }
