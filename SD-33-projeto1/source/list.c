@@ -13,10 +13,6 @@
  * @brief Interface para a estrutura da lista de automóveis.
  */
 
-void freeTEST(void* ptr) {
-    printf("FREEING %p\n", ptr);
-    free(ptr);
-}
 
 
 /* Cria e inicializa uma nova lista de carros.
@@ -27,11 +23,8 @@ struct list_t *list_create() {
     if (result == NULL)
         return NULL;
     result->size = 0;
-    result->head = (struct car_t*) malloc(sizeof(struct car_t));
-    if (result->head == NULL) 
-        return NULL;
-    result->head->data = NULL;
-    result->head->next = NULL;
+    result->head = NULL;
+    
     return result;
 }
 
@@ -39,36 +32,21 @@ struct list_t *list_create() {
  * Retorna 0 (OK) ou -1 em caso de erro.
  */
 int list_destroy(struct list_t *list) { //função alterada por RIta e Filipa
-    printf("GOT TO 1\n");
     if (list == NULL) {
         return -1;
     }
 
-
     //EMPTY LIST
     if (list->size == 0) {
-        free(list->head->data);
-        free(list->head);
         free(list);
         printf("DESTROYING EMPTY LIST\n");
         return 0;
     }
 
-
-
-
     struct car_t* current = list->head;
-    if (current->data == NULL) {
-        free(list->head);
-        free(list);
-        printf("RETURNING -1 IN DESTROY\n");
-        return -1;
-    }
     while (current != NULL) {
-        printf("ENTERED WHILE\n");
         struct car_t* temporary = current->next;
-        if (current->data != NULL) { //destruir a data do carro caso não seja já null
-            printf("GOING TO DESTROY\n");
+        if (current->data != NULL) { 
             if (data_destroy(current->data) != 0)
                 return -1;
         }
@@ -86,28 +64,25 @@ int list_destroy(struct list_t *list) { //função alterada por RIta e Filipa
 int list_add(struct list_t *list, struct data_t *car) {
     if (list == NULL || car == NULL)
         return -1;
-    struct car_t* node = (struct car_t*) malloc(sizeof(struct car_t));
-    if (node == NULL) {
-        return -1;
-    }
 
-
-
-    printf("GOING TO ADD TO EMPTY LIST\n");
     struct car_t* current = list->head;
-    if (list->size == 0) {
+    if (current == NULL) {
+        list->head = (struct car_t*) malloc(sizeof(struct car_t));
+        if (list->head == NULL) 
+            return -1;
         list->head->data = car;
         list->head->next = NULL;
         list->size++;
         return 0;
     }
 
-
+    struct car_t* node = (struct car_t*) malloc(sizeof(struct car_t));
+    if (node == NULL) {
+        return -1;
+    }
     node->data = car;
     node->next = NULL;
 
-    printf("GOING TO ADD TO NON EMPTY LIST\n");
-    printf("%B\n", current->next != NULL);
     if (current->next == NULL) {
         current->next = node; 
         list->size++;
@@ -115,35 +90,49 @@ int list_add(struct list_t *list, struct data_t *car) {
     }
     while (current->next != NULL) { 
         current = current->next;
-        printf("TRAVERSING LIST\n");
     }
     current->next = node;
     list->size++;
-    printf("ADDED TO LIST\n");
     return 0;
 }
 
 /* Remove da lista o primeiro carro que corresponda ao modelo indicado.
  * Retorna 0 se encontrou e removeu, 1 se não encontrou, ou -1 em caso de erro.
- * DOESNT EVER RETURN -1
  */
 int list_remove_by_model(struct list_t *list, const char *modelo) {
     if (list == NULL || modelo == NULL)
         return -1;
 
-    struct car_t* current = list->head;
-    while (current->next != NULL) {
-        struct car_t* discard = current->next;
-        if (strcmp(discard->data->modelo, modelo) == 0) {
-            discard->next = current->next;
-            free(discard);
-            discard = NULL;
-
-            list->size--;
-            return 0;
-        }
-        current = current->next;
+    struct car_t* previous = list->head;
+    if (previous == NULL)
+        return -1;
+    // if first item is the head of the list, frees it and points head to rest of list
+    // if the rest of list is null, head = null;
+    struct car_t* target = previous->next;
+    int match = strcmp(previous->data->modelo, modelo);
+    if (match == 0) {
+        list->head = target;
+        list->size--;
+        data_destroy(previous->data);
+        free(previous);
+        return 0;
     }
+
+    while (target != NULL) {
+        match = strcmp(target->data->modelo, modelo);
+        if (match != 0) {
+            previous = target;
+            target = target->next;
+            continue;
+        }
+
+        previous->next = target->next;
+        list->size--;
+        data_destroy(target->data);
+        free(target);
+        return 0;
+    }
+    
     return 1;
 }
 
@@ -176,25 +165,28 @@ struct data_t **list_get_by_year(struct list_t *list, int ano) {
     if (cars == NULL)
         return NULL;
 
+
     struct car_t* current = list->head;
-    int offset = 0;
     if (current == NULL)
         return NULL;
+    int offset = 0;
     while (current != NULL) {
         if (current->data->ano == ano) {
             cars[offset] = current->data;
+            printf("%s, %d \n", cars[offset]->modelo, cars[offset]->ano);
             offset++;
         }
         current = current->next;
     }
 
     struct data_t** result = (struct data_t**) malloc(sizeof(struct data_t) * offset + 1);
-    if (result == NULL) {
+    if (result == NULL)
         return NULL;
-    }
+    
     int i;
     for (i = 0; i < offset; i++) {
         result[i] = cars[i];
+        printf("%s, %d \n", result[i]->modelo, result[i]->ano);
     }
     free(cars);
     
@@ -226,10 +218,11 @@ int list_size(struct list_t *list) {
 char **list_get_model_list(struct list_t *list) {
     if (list == NULL)
         return NULL;
+
     char** models = (char**) malloc(sizeof(char*) * list->size);
-    if (models == NULL) {
+    if (models == NULL)
         return NULL;
-    }
+    
     struct car_t* current = list->head;
     int size = 0;
     if (current == NULL)
@@ -243,6 +236,7 @@ char **list_get_model_list(struct list_t *list) {
     }
     if (size == 0)
         return NULL;
+    
     char** result = (char**) malloc(sizeof(char*) * size);
     if (result == NULL)
         return NULL;
@@ -261,11 +255,6 @@ char **list_get_model_list(struct list_t *list) {
 int list_free_model_list(char **models) {
     if (models == NULL)
         return -1;
-    int i = 0;
-    char* current = models[0];
-    while (current != NULL) {
-        free(current);
-        current = models[++i];
-    }
+    free(models);
     return 0;
 }
