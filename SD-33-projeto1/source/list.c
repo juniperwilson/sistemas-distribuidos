@@ -30,6 +30,7 @@ struct list_t *list_create() {
     result->head = (struct car_t*) malloc(sizeof(struct car_t));
     if (result->head == NULL) 
         return NULL;
+    result->head = NULL;
     return result;
 }
 
@@ -42,15 +43,23 @@ int list_destroy(struct list_t *list) { //função alterada por RIta e Filipa
         return -1;
     }
     if (list->size == 0) {
+        free(list->head);
         free(list);
+        printf("DESTROYING EMPTY LIST\n");
         return 0;
     }
     struct car_t* current = list->head;
-    if (current == NULL)
+    if (current == NULL) {
+        free(list->head);
+        free(list);
+        printf("RETURNING -1 IN DESTROY\n");
         return -1;
+    }
     while (current != NULL) {
+        printf("ENTERED WHILE\n");
         struct car_t* temporary = current->next;
         if (current->data != NULL) { //destruir a data do carro caso não seja já null
+            printf("GOING TO DESTROY\n");
             if (data_destroy(current->data) != 0)
                 return -1;
         }
@@ -76,14 +85,14 @@ int list_add(struct list_t *list, struct data_t *car) {
     node->next = NULL;
     struct car_t* current = list->head;
     if (current == NULL) {
-        free(node);
-        return -1;
+        current = node;
+        return 0;
     }
-    list->size++;
     while (current->next != NULL) { 
         current = current->next;
     }
     current->next = node;
+    list->size++;
     return 0;
 }
 
