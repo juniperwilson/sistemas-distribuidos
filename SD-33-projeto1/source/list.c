@@ -314,6 +314,21 @@ struct list_t* merge(struct list_t* first, struct list_t* second) {
         smallest->size--;
         destroy_node(temp);        
     }
+    struct list_t* rest;
+    if (first->size > 0) {
+        rest = first;
+    } else if (second->size > 0) {
+        rest = second;
+    }
+
+    while (rest->size > 0) {
+        list_add(result, rest->head->data);
+        struct car_t* temp = rest->head;
+        rest->head = rest->head->next;
+        rest->size--;
+        destroy_node(temp);
+    }
+
     list_destroy(first);
     list_destroy(second);
 
