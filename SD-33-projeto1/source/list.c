@@ -42,9 +42,7 @@ int list_destroy(struct list_t *list) {
     struct car_t* current = list->head;
     while (current != NULL) {
         struct car_t* temporary = current->next;
-        if (data_destroy(current->data) != 0)
-            return -1;
-        free(current);
+        destroy_node(current);
         current = temporary;
     }
     free(list); 
@@ -106,8 +104,7 @@ int list_remove_by_model(struct list_t *list, const char *modelo) {
     if (match == 0) {
         list->head = target;
         list->size--;
-        data_destroy(previous->data);
-        free(previous);
+        destroy_node(previous);
         return 0;
     }
 
@@ -121,8 +118,7 @@ int list_remove_by_model(struct list_t *list, const char *modelo) {
 
         previous->next = target->next;
         list->size--;
-        data_destroy(target->data);
-        free(target);
+        destroy_node(target);
         return 0;
     }
     
@@ -246,5 +242,108 @@ int list_free_model_list(char **models) {
     if (models == NULL)
         return -1;
     free(models);
+    return 0;
+}
+
+/* Function that checks if a string is present in an array of strings.
+*  Returns 1 if array contains item, 0 if not, -1 if error.
+*/
+int contains(char** array, char* item, int size) {
+    if (array == NULL || size < 0)
+        return -1;
+    if (size == 0) 
+        return 0;
+    int i;
+    for (i = 0; i < size; i++) {
+        if (strcmp(array[i], item) == 0)
+            return 1;
+    }
+    return 0;
+}
+
+/* Function that splits a linked list roughly in half.
+*  Returns linked list that is the second half or original list, or NULL if error.
+*/
+struct list_t* split(struct list_t* list) {
+    if (list == NULL)
+        return NULL;
+    
+    struct car_t* fast = list->head;
+    struct car_t* slow = list->head;
+    int counter = 1;
+    while (fast->next != NULL) {
+        fast = fast->next->next;
+        if (fast != NULL) {
+            slow = slow->next;
+            counter++;
+        }
+    }
+    struct list_t* result = (struct list_t*) malloc(sizeof(struct list_t));
+    if (result == NULL)
+        return NULL;
+
+    struct car_t* head = slow->next;
+    result->head = head;
+    result->size = list->size - counter;
+    list->size = counter;
+    slow->next = NULL;
+    return result;
+}
+
+/* Function that merges two linked lists that are each sorted.
+*  Returns linked list, or NULL if error.
+*/
+struct list_t* merge(struct list_t* first, struct list_t* second) {
+    if (first == NULL) return second;
+    if (second == NULL) return first;
+
+    struct list_t* result = (struct list_t*) malloc(sizeof(struct list_t));
+    if (result == NULL)
+        return NULL;
+
+    while (first->size > 0 && second->size > 0) {
+        struct list_t* smallest;
+        if (first->head->data->ano <= second->head->data->ano) {
+            smallest = first;
+        } else {
+            smallest = second;
+        }            
+        list_add(result, smallest->head->data);
+        struct car_t* temp = smallest->head;
+        smallest->head = smallest->head->next;
+        smallest->size--;
+        destroy_node(temp);        
+    }
+    list_destroy(first);
+    list_destroy(second);
+
+    return result;
+}
+
+/* Function that merge sorts a linked list.
+*  Returns list ordered by year in ascending order, or NULL if error.
+*/
+struct list_t* mergesort(struct list_t* list) {
+    if (list == NULL)
+        return NULL;
+
+    if (list->size <= 1)
+        return list;
+
+    struct list_t* second = split(list);
+
+    list = mergesort(list);
+    second = mergesort(second);
+
+    return merge(list, second);
+}
+
+/* Function that destroys a single node.
+*  Returns 0 or -1 if error.
+*/
+int destroy_node(struct car_t* node) {
+    if (data_destroy(node->data) != 0)
+            return -1;
+        free(node);
     return 0;
 }
